@@ -62,3 +62,58 @@ Book.where(title:"The Force").class
 Book.find_by_title("The Force").class
 #=> Book(id: integer, title: string, sales: integer, created_at: datetime, updated_at: datetime, author_id: integer, genre_id: integer)
 ```
+
+### Check any record exist or not 
+> use any
+```ruby
+leia = Author.find_by_name("Leia")
+leia.book.any?
+=>Book Exists (1.9ms)  SELECT  1 AS one FROM "books" WHERE "books"."author_id" = $1 LIMIT $2  [["author_id", 3], ["LIMIT", 1]] return false
+
+vader = Author.find_by_name("Vader")
+vader.book.any?
+Book Exists (2.2ms)  SELECT  1 AS one FROM "books" WHERE "books"."author_id" = $1 LIMIT $2  [["author_id", 1], ["LIMIT", 1]] return true
+```
+>Book.count
+```sql
+SELECT COUNT(*) FROM "books"
+```
+
+# How many sales author made
+> Book.where(name:"Vader")
+```sql
+SELECT COUNT(*) FROM "books"
+```
+
+>使用連環計
+```ruby
+#sum(:欄位)
+Author.find_by_name("Vader").book.sum(:sales)
+```
+#result
+```sql
+SELECT  "authors".* FROM "authors" WHERE "authors"."name" = $1 LIMIT $2  [["name", "Vader"], ["LIMIT", 1]]
+   (2.1ms)  SELECT SUM("books"."sales") FROM "books" WHERE "books"."author_id" = $1  [["author_id", 1]]
+=>2195
+```
+
+```ruby
+#average
+Book.average(:sales) 
+=>0.67375e3
+Book.average(:sales).to_f
+=>673.75
+```
+
+```ruby
+#order => return collection
+Book.order('sales DESC')
+=> #<ActiveRecord::Relation [#<Book id: 4, title: "DIY Deathstar", sales: 1200, created_at: "2018-05-13 09:52:16", updated_at: "2018-05-13 09:52:16", author_id: 1, genre_id: 2>, #<Book id: 2, title: "Britney Speares: An Anthology", sales: 950, created_at: "2018-05-13 09:52:16", updated_at: "2018-05-13 09:52:16", author_id: 1, genre_id: 3>, #<Book id: 1, title: "The Force", sales: 500, created_at: "2018-05-13 09:52:16", updated_at: "2018-05-13 09:52:16", author_id: 2, genre_id: 2>, #<Book id: 3, title: "Only One Direction", sales: 45, created_at: "2018-05-13 09:52:16", updated_at: "2018-05-13 09:52:16", author_id: 1, genre_id: 3>]>
+Book.order('sales DESC').first
+
+Book.order('sales DESC').first.author.name
+=>Book Load (2.5ms)  SELECT  "books".* FROM "books" ORDER BY sales DESC LIMIT $1  [["LIMIT", 1]]
+  Author Load (1.3ms)  SELECT  "authors".* FROM "authors" WHERE "authors"."id" = $1 LIMIT $2  [["id", 1], ["LIMIT", 1]] Return "Vader"
+```
+
+
