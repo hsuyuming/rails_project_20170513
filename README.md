@@ -55,3 +55,10 @@ Book.find_by_title("The Force")
   Book Load (3.0ms)  SELECT  "books".* FROM "books" WHERE "books"."title" = $1 LIMIT $2  [["title", "The Force"], ["LIMIT", 1]]
 => #<Book id: 1, title: "The Force", sales: 500, created_at: "2018-05-13 09:52:16", updated_at: "2018-05-13 09:52:16", author_id: 2, genre_id: 2>
 ```
+
+```ruby
+Book.where(title:"The Force").class
+#=> Book::ActiveRecord_Relation
+Book.find_by_title("The Force").class
+#=> Book(id: integer, title: string, sales: integer, created_at: datetime, updated_at: datetime, author_id: integer, genre_id: integer)
+```
