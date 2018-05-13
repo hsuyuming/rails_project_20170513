@@ -116,4 +116,66 @@ Book.order('sales DESC').first.author.name
   Author Load (1.3ms)  SELECT  "authors".* FROM "authors" WHERE "authors"."id" = $1 LIMIT $2  [["id", 1], ["LIMIT", 1]] Return "Vader"
 ```
 
+#Ability to run multiple queries and be able to connect tables
+> Question: Which genres that each one of our authors has written?
+
+```ruby
+#model:Author.rb
+class Author < ApplicationRecord
+    has_many :books
+    has_many :genres, through: :books
+end
+#model:Gerne.rb
+class Genre < ApplicationRecord
+    has_many :books
+    has_many :authors, through: :books
+end
+
+#rails c
+reload!
+Author.find_by_name("Vader").genres
+  Author Load (2.3ms)  SELECT  "authors".* FROM "authors" WHERE "authors"."name" = $1 LIMIT $2  [["name", "Vader"], ["LIMIT", 1]]
+  Genre Load (3.3ms)  SELECT  "genres".* FROM "genres" INNER JOIN "books" ON "genres"."id" = "books"."genre_id" WHERE "books"."author_id" = $1 LIMIT $2  [["author_id", 1], ["LIMIT", 11]]
+#<ActiveRecord::Associations::CollectionProxy [#<Genre id: 2, name: "Non-Fiction", created_at: "2018-05-13 09:52:16", updated_at: "2018-05-13 09:52:16">, #<Genre id: 3, name: "Biographies", created_at: "2018-05-13 09:52:16", updated_at: "2018-05-13 09:52:16">, #<Genre id: 3, name: "Biographies", created_at: "2018-05-13 09:52:16", updated_at: "2018-05-13 09:52:16">]>
+```
+
+# Plunk
+> It comes to being able to select pick and choose the kind of items that you want.
+> can allow you don't need to iterator each object.
+
+```ruby
+Book.all => foreach get name
+Book.pluck(:title)
+
+Author.ids #shortcut and handy way
+=> [1, 2, 3]
+```
+```sql
+SELECT "books"."title" FROM "books"
+=>["The Force", "Britney Speares: An Anthology", "Only One Direction", "DIY Deathstar"]
+```
+
+
+# Performace tunning
+
+> contoller 
+
+```ruby
+def index
+  @books = Book.all
+end
+
+#change to 
+def index
+  @books = Book.includes(:author, :genre)
+end
+
+web_1  |   Book Load (4.6ms)  SELECT "books".* FROM "books"
+web_1  |   Author Load (1.4ms)  SELECT "authors".* FROM "authors" WHERE "authors"."id" IN (2, 1)
+web_1  |   Genre Load (2.2ms)  SELECT "genres".* FROM "genres" WHERE "genres"."id" IN (2, 3)
+```
+reduces hit db's count
+
+
+
 
